@@ -1,6 +1,7 @@
 import socket, sys, os, traceback;
 from multiprocessing import Queue;
 from multiprocessing import Process;
+import DataPacket;
 import threading;
 import time;
 
@@ -22,9 +23,26 @@ RUNNING = True;
 UDP_SENDER   = None;
 KEY_LISTENER = None;
 
+# Data Queue for sending
+DATA_QUEUE = Queue();
+
+# Data packet for runtime communication
+PACKET = DataPacket.Packet();
+PACKET.params = [DataPacket.Param("Running", True)];
+
+
 # Handles udp networking
 class UdpSender(threading.Thread):
-    def __init__(self, host, port):
+
+    class RobotPacket(DataPacket.Packet):
+        def __init__(self, udpSender):
+            super(UdpSender.RobotPacket, self).__init__();
+            self.udpSender = udpSender;
+        
+        def sendData(self, data):
+            self.udpSender.sendData(data);        
+
+    def __init__(self, host, port, packet):
         threading.Thread.__init__(self);
         
         self.running = False;
@@ -32,30 +50,44 @@ class UdpSender(threading.Thread):
         self.host = host;
         self.port = port;
 
+        # Data packet that will be iteratively sent
+        self.packet = self.RobotPacket(self);
+        self.packet.params = packet.params;
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
         
     ''' Sends data to host
         sendData :: void '''
     def sendData(self, data):
-        self.socket.sendto(data, (self.host, self.port));
+        log("Sending Data Packet...");
+        try:
+            self.socket.sendto(data, (self.host, self.port));
+
+        except:
+            log("Data Transfer Failed");
+            traceback.print_exc();
 
     ''' Sender thread loop
         run :: void '''
     def run(self):
-        self.running = True
+        global DATA_QUEUE
+        self.running = True;
+
+        # Bind to port
         self.bind();
         
-        # Sending loop
-        while(self.running):
-            log("Sending Data Packet...");
-            try:
-                data = "WHAT UP";
-                self.sendData(data);
+        log("Waiting for input data...");        
 
-            except:
-                log("Data Transfer failed");
-                traceback.print_exc();
-            time.sleep(1);
+        # Sending loop
+        while (self.running):
+
+            # Check for queue packets
+            while (not DATA_QUEUE.empty()):
+                # Send as long as the queue is not empty 
+                self.sendData(DATA_QUEUE.get());
+
+            # Send default data packet
+            self.packet.send();
         
         # Close socket
         self.close();
@@ -63,17 +95,18 @@ class UdpSender(threading.Thread):
     ''' Binds socket to udp port and return if successful
         bind :: bool '''    
     def bind(self):
+        log("Binding to port " + str(self.port) + "...");
         try :
             self.socket.bind(('', self.port));
             return True;
 
         except socket.error:
-            log("Binding failed to port: " + self.port);
+            log("Binding failed to port: " + str(self.port));
             traceback.print_exc();
             return False;
     
     ''' Stops thread and closes thread
-        stpp :: void '''
+        stop :: void '''
     def stop(self):
         self.running = False;
 
@@ -105,13 +138,12 @@ class KeyListener(threading.Thread):
 ''' Main method
     main :: void '''
 def main():
+    global UDP_SENDER, KEY_LISTENER;    
 
     log ("Use [ENTER] to interrupt program");
 
-    global UDP_SENDER, KEY_LISTENER;    
-
     # Start program threads
-    UDP_SENDER = UdpSender(HOST_IP, UDP_PORT);
+    UDP_SENDER = UdpSender(HOST_IP, UDP_PORT, PACKET);
     KEY_LISTENER = KeyListener();
 
     UDP_SENDER.start();
@@ -124,6 +156,11 @@ def main():
     # Stop program
     stop();
 
+''' Adds data to queue to be sent by sender thread
+    sendData :: void '''
+def sendData(data):
+    global DATA_QUEUE
+    DATA_QUEUE.put(data);
 
 ''' Stops program 
     stop :: void '''
@@ -137,6 +174,7 @@ def stop():
     os._exit(0);    
 
 ''' Logs specified message for future debugging
+    TODO: implement REAL logger here
     log :: void '''
 def log(msg):
     print(msg);
