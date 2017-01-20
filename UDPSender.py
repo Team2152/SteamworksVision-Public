@@ -3,10 +3,10 @@ from multiprocessing import Queue;
 from multiprocessing import Process;
 import DataPacket;
 import threading;
-import time;
+import Timer;
 
 '''
-    python UDPSender.py [HOST_IP] [UDP_PORT]
+    Usage: python UDPSender.py [HOST_IP] [UDP_PORT]
 
     Sends data from queue to target ip on specified port
     via UDP. Handles all networking procedures. 
@@ -30,30 +30,40 @@ KEY_LISTENER = None;
 DATA_QUEUE = Queue();
 
 # Data packet for runtime communication
+# Define robot parameters to be sent here
 PACKET = DataPacket.Packet();
 PACKET.params = [
-DataPacket.Param("Running", True)
+DataPacket.Param("Running", True),
+DataPacket.Param("Move X",  0.0 ),
+DataPacket.Param("Move Y",  0.0 )
 ];
 
 
 # Handles udp networking
 class UdpSender(threading.Thread):
 
+    # Nested packet class (extended from @DataPacket.Packet)
     class RobotPacket(DataPacket.Packet):
         def __init__(self, udpSender):
             super(UdpSender.RobotPacket, self).__init__();
             self.udpSender = udpSender;
-        
+ 
         ''' Sends data (overrided method)
             sendData :: void '''
-        def sendData(self, data):
-            self.udpSender.sendData(data);        
+        def sendParam(self, index, data):
+            self.udpSender.sendData(data);
+            log("-> Chunk " + 
+                str(index + 1) + " of " + 
+                str(len(self.params)) + " : ('" + 
+                str(data) + "')");        
 
     def __init__(self, host, port, packet):
         threading.Thread.__init__(self);
-        
+
+        # Flag for thread loop 
         self.running = False;
 
+        # Parameters for sending via udp
         self.host = host;
         self.port = port;
 
@@ -61,12 +71,21 @@ class UdpSender(threading.Thread):
         self.packet = self.RobotPacket(self);
         self.packet.params = packet.params;
 
+        # Create self-resetting timer
+        self.sendTimer = Timer.Timer(2, True);
+        self.sendTimer.start();
+
+        # Inititialize socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
+        
+        # Send count for debugging        
+        self.sendCount = 0;
         
     ''' Sends data to host
         sendData :: void '''
     def sendData(self, data):
-        log("Sending Data Packet...");
+        self.sendCount += 1;
+        log("Sending Data... Send Count: " + str(self.sendCount));
         try:
             self.socket.sendto(data, (self.host, self.port));
 
@@ -93,8 +112,11 @@ class UdpSender(threading.Thread):
                 # Send as long as the queue is not empty 
                 self.sendData(DATA_QUEUE.get());
 
-            # Send default data packet
-            self.packet.send();
+            # Send every timer cycle
+            if (self.sendTimer.finished()):
+                log("\nSending Parameter Data Packet...");        
+                # Send default data packet
+                self.packet.send();
         
         # Close socket
         self.close();

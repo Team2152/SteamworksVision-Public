@@ -28,18 +28,19 @@ class Packet(object):
         # List of parameters that will be sent over a network
         self.params = [];
     
-    ''' Method for sending data over a network.
-        Should be overrided in derived class
+    ''' Method for sending parameters over a network.
+        Should be overrided in derived class.
+        @index : index of parameter
         sendData :: void '''
-    def sendData(self, data):
+    def sendParam(self, index, data):
         # Override this
         return;
 
     ''' Sends self in serialized pieces
         send :: void '''
     def send(self):
-        for p in self.params:
-            self.sendData(p.serialize());
+        for i in range(len(self.params)):
+            self.sendParam(i, self.params[i].serialize());
         
         
     
