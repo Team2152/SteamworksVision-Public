@@ -6,15 +6,18 @@ import threading;
 import time;
 
 '''
+    python UDPSender.py [HOST_IP] [UDP_PORT]
+
     Sends data from queue to target ip on specified port
     via UDP. Handles all networking procedures. 
     
     Press [ENTER] to interrupt program safely
 '''
 
-# Target udp port and host ip
-UDP_PORT = 5801;
-HOST_IP  = "10.151.106.190";
+# Target udp port and host ip (retreive from arguments)
+# sys.argv[0] is program file name
+UDP_PORT = int(sys.argv[2]);
+HOST_IP  = sys.argv[1];
 
 # Status of program
 RUNNING = True;
@@ -28,7 +31,9 @@ DATA_QUEUE = Queue();
 
 # Data packet for runtime communication
 PACKET = DataPacket.Packet();
-PACKET.params = [DataPacket.Param("Running", True)];
+PACKET.params = [
+DataPacket.Param("Running", True)
+];
 
 
 # Handles udp networking
@@ -39,6 +44,8 @@ class UdpSender(threading.Thread):
             super(UdpSender.RobotPacket, self).__init__();
             self.udpSender = udpSender;
         
+        ''' Sends data (overrided method)
+            sendData :: void '''
         def sendData(self, data):
             self.udpSender.sendData(data);        
 
@@ -104,7 +111,7 @@ class UdpSender(threading.Thread):
             log("Binding failed to port: " + str(self.port));
             traceback.print_exc();
             return False;
-    
+
     ''' Stops thread and closes thread
         stop :: void '''
     def stop(self):
@@ -140,6 +147,12 @@ class KeyListener(threading.Thread):
 def main():
     global UDP_SENDER, KEY_LISTENER;    
 
+    valid = validArguments();
+    if (not valid):
+        log("Not valid arguments.");
+        log("python UDPSender.py [HOST_IP] [UDP_PORT]");
+        os._exit(0);
+
     log ("Use [ENTER] to interrupt program");
 
     # Start program threads
@@ -155,6 +168,15 @@ def main():
     
     # Stop program
     stop();
+
+''' Check if arguments are valid for use
+    validArguments :: bool '''
+def validArguments():
+
+    if (not isinstance(UDP_PORT, int)): return False;
+    if (not isinstance(HOST_IP,  str)): return False;
+    
+    return True;
 
 ''' Adds data to queue to be sent by sender thread
     sendData :: void '''
