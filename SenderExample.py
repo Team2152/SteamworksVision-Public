@@ -11,7 +11,7 @@ dataPacket.params = [
 ]
 
 
-# Call @startProcess([HOST_IP], [UDP_PORT], [DATA_TEMPLATE]) 
+# Call @startProcess([HOST_IP], [UDP_PORT], [DATA_SIGNATURE]) 
 sender = UDPSender.startProcess("localhost", 56081, dataPacket);
 
 time.sleep(2);

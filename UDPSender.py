@@ -36,15 +36,8 @@ DATA_QUEUE = None;
 # in seconds
 UPDATE_INTERVAL = 0.5;
 
-# Data packet for runtime communication
-# Define robot parameters to be sent here
-# Write parameter names without spaces
-PACKET = DataPacket.Packet();
-PACKET.params = [
-DataPacket.Param("Running", True),
-DataPacket.Param("Move_X",  0.0 ),
-DataPacket.Param("Move_Y",  0.0 )
-];
+# type signature of data for runtime communication
+DATA_SIGNATURE = None;
 
 # Commands for @UdpSender to execute
 class Command():
@@ -227,14 +220,14 @@ class InputListener(threading.Thread):
 
 ''' Process method to be called as a target to the sender process
     UDPProcess :: void '''
-def UDPProcess(host, port, packet, dataQueue):
-    global UDP_PORT, HOST_IP, PACKET, DATA_QUEUE;
+def UDPProcess(host, port, signature, dataQueue):
+    global UDP_PORT, HOST_IP, DATA_SIGNATURE, DATA_QUEUE;
     
     # Set globals to arguments
-    UDP_PORT   = port;
-    HOST_IP    = host;
-    PACKET     = packet;
-    DATA_QUEUE = dataQueue;
+    UDP_PORT       = port;
+    HOST_IP        = host;
+    DATA_SIGNATURE = signature;
+    DATA_QUEUE     = dataQueue;
 
     main();
 
@@ -255,7 +248,7 @@ def main():
     log("Use [ENTER] to interrupt program");
 
     # Start program threads
-    UDP_SENDER = UDPSender(HOST_IP, UDP_PORT, PACKET);
+    UDP_SENDER = UDPSender(HOST_IP, UDP_PORT, DATA_SIGNATURE);
     UDP_SENDER.start();
     
     # Create input thread when programs runs as a standalone
@@ -309,7 +302,7 @@ def commandProcess(command):
     startProcess :: Process '''
 def startProcess(host, port, packet):
     # Set debugging flag
-    multiprocessing.log_to_stderr(logging.DEBUG);
+    # multiprocessing.log_to_stderr(logging.DEBUG);
     
     # Create new queue for data transfer between processes
     global DATA_QUEUE;
@@ -359,7 +352,6 @@ def log(msg):
 if __name__ == '__main__':
 
     # Update standalone flag    
-    global IS_STANDALONE;
     IS_STANDALONE = True;
 
     UDPProcess(sys.argv[1], sys.argv[2]);
