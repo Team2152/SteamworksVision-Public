@@ -48,11 +48,15 @@ DataPacket.Param("Move_Y",  0.0 )
 
 # Commands for @UdpSender to execute
 class Command():
-    STOP       = 0;
-    CHANGE_SIG = 1;
+    NONE       = 0;
+    STOP       = 1;
+    CHANGE_SIG = 2;
         
     def __init__(self, command):
         self.command = command;
+
+    def isCommand(self, command):
+        return (self.command == command);
 
 
 # Handles udp networking
@@ -76,13 +80,16 @@ class UDPSender(threading.Thread):
 
     def __init__(self, host, port, packet):
         threading.Thread.__init__(self);
-
+        
         # Flag for thread loop 
         self.running = False;
 
         # Parameters for sending via udp
         self.host = host;
         self.port = port;
+
+        # Track last command executed
+        self.lastCommand = Command(Command.NONE);
 
         # Data packet that will be iteratively sent
         self.packet = self.RobotPacket(self);
@@ -116,8 +123,11 @@ class UDPSender(threading.Thread):
         cmdID = cmd.command;
         log("Executing incoming command...  CMD_CODE: " + str(cmdID));    
        
+        # Execute by specified command id
         if (cmdID == Command.STOP):
             RUNNING = False;
+
+        self.lastCommand = cmd;
         
     
     ''' Sender thread loop
@@ -139,7 +149,11 @@ class UDPSender(threading.Thread):
                 data = DATA_QUEUE.get();
                 # Set runtime packet if in right format
                 if (isinstance(data, DataPacket.Packet)):
-                    self.packet.setData(data);
+                    # Handle 'change signature' commands
+                    if (self.lastCommand.isCommand(Command.CHANGE_SIG)):
+                        self.packet.params = data.params;
+                    else:
+                        self.packet.setData(data);
                 elif (isinstance(data, Command)):
                     self.executeCommand(data);            
                 else:
