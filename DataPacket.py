@@ -18,7 +18,7 @@ class Param():
         return self.serialize();
 
     ''' Serializes self and returns as a string
-        serialize :: string '''
+        serialize :: str '''
     def serialize(self):
         # Define data structure for serialization
 
@@ -43,15 +43,14 @@ class Packet(object):
         setData :: void '''
     def setData(self, packet):
         for p in packet.params:
-                setParam(p);
+                self.setParam(p.name, p.value);
 
     ''' Method for sending parameters over a network.
-        Should be overrided in derived class.
+        Should be implemented in derived class.
         @index : index of parameter
         sendData :: void '''
     def sendParam(self, index, data):
-        # Override this
-        return;
+        raise NotImplementedError("Should implement for data transfer");
     
     ''' Sends self in serialized pieces
         send :: void '''
