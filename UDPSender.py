@@ -143,25 +143,33 @@ class UDPSender(threading.Thread):
 
         # Sending loop
         while (self.running):
-
+            
             # Check for queue packets
             while (not DATA_QUEUE.empty()): 
+                # Pop data from shared queue
                 data = DATA_QUEUE.get();
-                # Set runtime packet if in right format
+
+                # Acknowledge data
                 if (isinstance(data, DataPacket.Packet)):
                     # Handle 'change signature' commands
                     if (self.lastCommand.isCommand(Command.CHANGE_SIG)):
+                        # Change packet parameter array to new signature
                         self.packet.params = data.params;
                     else:
+                        # Update runtime packet with data
                         self.packet.setData(data);
+
                 elif (isinstance(data, Command)):
-                    self.executeCommand(data);            
+                    # Execute command if given
+                    self.executeCommand(data);
+
                 else:
                     log("Not a valid object type");
 
             # Send data every timer cycle
             if (self.sendTimer.finished()):
                 log("\nSending Parameter Data Packet...");        
+                
                 # Send runtime data packet
                 self.packet.send();
         
@@ -283,7 +291,18 @@ def validArguments():
     sendData :: void '''
 def sendData(data):
     global DATA_QUEUE;
-    DATA_QUEUE.put(data);
+
+    if (isinstance(data, DataPacket.Packet)):
+        DATA_QUEUE.put(data);
+    else:
+        log("Can only send instances of @DataPacket.Packet");
+
+''' Commands the sender process with specified command (ID)
+    commandProcess :: void '''
+def commandProcess(command):
+    global DATA_QUEUE;
+
+    DATA_QUEUE.put(Command(command));
 
 ''' Start the UDPSender process and return a reference to it
     Give host ip, udp port, and template packet
@@ -317,7 +336,7 @@ def stopProcess():
     log("Sending stop command to UDPSender process...");
 
     # Send stop command to @UDPSender through shared queue
-    sendData(Command(Command.STOP));
+    commandProcess(Command.STOP);
 
 ''' Stops program 
     stop :: void '''

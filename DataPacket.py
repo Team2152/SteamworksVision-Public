@@ -43,7 +43,7 @@ class Packet(object):
         setData :: void '''
     def setData(self, packet):
         for p in packet.params:
-                self.setParam(p.name, p.value);
+            self.setParam(p.name, p.value);
 
     ''' Method for sending parameters over a network.
         Should be implemented in derived class.
