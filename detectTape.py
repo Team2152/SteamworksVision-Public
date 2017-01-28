@@ -112,4 +112,4 @@ def detectTape(tapeLocation, cameraNumber):
             break
     camera.release()
 
-detectTape("G", 1)
+detectTape("G", 0)
