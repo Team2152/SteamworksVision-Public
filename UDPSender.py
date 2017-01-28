@@ -32,18 +32,10 @@ INPUT_LISTENER = None;
 # Data Queue for sending
 DATA_QUEUE = None;
 
-# Interval in which the runtime packet is sent
-# in seconds
-UPDATE_INTERVAL = 0.5;
-
-# type signature of data for runtime communication
-DATA_SIGNATURE = None;
-
 # Commands for @UdpSender to execute
 class Command():
     NONE       = 0;
     STOP       = 1;
-    CHANGE_SIG = 2;
         
     def __init__(self, command):
         self.command = command;
@@ -53,25 +45,9 @@ class Command():
 
 
 # Handles udp networking
-class UDPSender(threading.Thread):
+class UDPSender(threading.Thread):     
 
-    # Nested packet class to make use of the @sendData(data)
-    # (implementation of @DataPacket.Packet)
-    class RobotPacket(DataPacket.Packet):
-        def __init__(self, udpSender):
-            super(UDPSender.RobotPacket, self).__init__();
-            self.udpSender = udpSender;
- 
-        ''' Sends data (overrided method)
-            sendData :: void '''
-        def sendParam(self, index, data):
-            self.udpSender.sendData(data);
-            log("-> Chunk " + 
-                str(index + 1) + " of " + 
-                str(len(self.params)) + " : ('" + 
-                str(data) + "')");        
-
-    def __init__(self, host, port, packet):
+    def __init__(self, host, port):
         threading.Thread.__init__(self);
         
         # Flag for thread loop 
@@ -80,17 +56,6 @@ class UDPSender(threading.Thread):
         # Parameters for sending via udp
         self.host = host;
         self.port = port;
-
-        # Track last command executed
-        self.lastCommand = Command(Command.NONE);
-
-        # Data packet that will be iteratively sent
-        self.packet = self.RobotPacket(self);
-        self.packet.params = packet.params;
-
-        # Create self-resetting timer
-        self.sendTimer = Timer.Timer(UPDATE_INTERVAL, True);
-        self.sendTimer.start();
 
         # Initialize socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
@@ -115,12 +80,10 @@ class UDPSender(threading.Thread):
 
         cmdID = cmd.command;
         log("Executing incoming command...  CMD_CODE: " + str(cmdID));    
-       
+
         # Execute by specified command id
         if (cmdID == Command.STOP):
             RUNNING = False;
-
-        self.lastCommand = cmd;
         
     
     ''' Sender thread loop
@@ -144,13 +107,8 @@ class UDPSender(threading.Thread):
 
                 # Acknowledge data
                 if (isinstance(data, DataPacket.Packet)):
-                    # Handle 'change signature' commands
-                    if (self.lastCommand.isCommand(Command.CHANGE_SIG)):
-                        # Change packet parameter array to new signature
-                        self.packet.params = data.params;
-                    else:
-                        # Update runtime packet with data
-                        self.packet.setData(data);
+                    # Send serialized data
+                    self.sendData(data.serialize());
 
                 elif (isinstance(data, Command)):
                     # Execute command if given
@@ -159,13 +117,6 @@ class UDPSender(threading.Thread):
                 else:
                     log("Not a valid object type");
 
-            # Send data every timer cycle
-            if (self.sendTimer.finished()):
-                log("\nSending Parameter Data Packet...");        
-                
-                # Send runtime data packet
-                self.packet.send();
-        
         # Close socket
         self.close();
 
@@ -203,7 +154,7 @@ class InputListener(threading.Thread):
     ''' Listener thread loop
         run :: void '''
     def run(self):
-        global RUNNING
+        global RUNNING;
 
         while (RUNNING):
             # Wait for any input (blocks thread)
@@ -212,21 +163,21 @@ class InputListener(threading.Thread):
             if (IS_STANDALONE):
                 # Set @RUNNING flag appropriately
                 RUNNING = False;
+                break;
             else:
                 stopProcess();
                 break;
 
-            log("Program Stopping...");
+        log("Key listener dead.");
 
 ''' Process method to be called as a target to the sender process
     UDPProcess :: void '''
 def UDPProcess(host, port, signature, dataQueue):
-    global UDP_PORT, HOST_IP, DATA_SIGNATURE, DATA_QUEUE;
+    global UDP_PORT, HOST_IP, DATA_QUEUE;
     
     # Set globals to arguments
     UDP_PORT       = port;
     HOST_IP        = host;
-    DATA_SIGNATURE = signature;
     DATA_QUEUE     = dataQueue;
 
     main();
@@ -248,7 +199,7 @@ def main():
     log("Use [ENTER] to interrupt program");
 
     # Start program threads
-    UDP_SENDER = UDPSender(HOST_IP, UDP_PORT, DATA_SIGNATURE);
+    UDP_SENDER = UDPSender(HOST_IP, UDP_PORT);
     UDP_SENDER.start();
     
     # Create input thread when programs runs as a standalone
@@ -350,7 +301,6 @@ def log(msg):
 
 # Start point of program
 if __name__ == '__main__':
-
     # Update standalone flag    
     IS_STANDALONE = True;
 
