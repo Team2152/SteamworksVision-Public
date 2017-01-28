@@ -5,7 +5,7 @@ import math as m
 
 lowVal = (0, 90, 112)
 highVal = (20, 201, 255)
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(0)
 global lowHue
 global highHue
 global lowSat
@@ -58,6 +58,7 @@ cv2.createTrackbar("lowSat", "Trackbars", lowSat, 256, callback3)
 cv2.createTrackbar("highSat", "Trackbars", highSat, 256, callback4)
 cv2.createTrackbar("lowIntensity", "Trackbars", lowIntensity, 256, callback5)
 cv2.createTrackbar("highIntensity", "Trackbars", highIntensity, 256, callback6)
+
 while True:
     (grabbed, frame) = camera.read()
     # cv2.imshow("testing",frame)
@@ -82,7 +83,7 @@ while True:
         if cnt is not None:
             x, y, w, h = cv2.boundingRect(cnt)
             rect = cv2.minAreaRect(cnt)
-            box = cv2.boxPoints(rect)
+            box = cv2.cv.BoxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(frame, [box], 0, (255, 0, 0), 2)
             hull = cv2.convexHull(cnt)
