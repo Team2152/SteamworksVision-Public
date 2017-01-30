@@ -60,7 +60,7 @@ class Packet(object):
         length = len(self.params);
         for i in range(length):
             data = data + p.serialize();
-            if (i < length - 1) data = data + ",";
+            if (i < length - 1): data = data + ",";
         return "%" + self.item + ":" + data + ";";
             
                
