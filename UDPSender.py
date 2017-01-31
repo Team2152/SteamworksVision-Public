@@ -56,13 +56,13 @@ class UDPSender(threading.Thread):
         log("Waiting for input data...");        
 
         # Sending loop
-        while (not STATUS.isStatus(Status.STOPPED)):
+        while (not STATUS.isStopped()):
             # Check for queue packets
             while (not self.dataQueue.empty()): 
                 # Pop data from shared queue
                 data = self.dataQueue.get();
                 
-                if (STATUS.isStatus(Status.RUNNING)):
+                if (STATUS.isRunning()):
                     # Acknowledge data
                     if (isinstance(data, DataPacket.Packet)):
                         # Send serialized data
@@ -105,8 +105,9 @@ def UDPProcess(host, port, dataQueue, status):
     sender = UDPSender(host, port, dataQueue);
     sender.start();
        
-    while(not STATUS.isStatus(Status.STOPPED)): pass;
+    while(not STATUS.isStopped()): pass;
 
+    # Wait for sender thread to stop
     while (sender.isAlive()): pass;
 
     log("UDP Sender Done.");

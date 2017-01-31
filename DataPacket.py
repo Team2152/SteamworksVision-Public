@@ -33,7 +33,7 @@ class Packet(object):
     def __init__(self):
         # List of parameters that will be sent over a network;
         self.params = [];
-        self.item = Item.PEG;
+        self.item = self.Item.PEG;
 
     ''' Set corresponding parameter to a given value
         setParam :: void '''
@@ -59,7 +59,7 @@ class Packet(object):
         data = "";
         length = len(self.params);
         for i in range(length):
-            data = data + p.serialize();
+            data = data + self.params[i].serialize();
             if (i < length - 1): data = data + ",";
         return "%" + self.item + ":" + data + ";";
             

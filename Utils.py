@@ -31,6 +31,15 @@ class Status():
     def isStatus(self, status):
         return (self.sharedObject.value == status);
 
+    def isStopped(self):
+        return self.isStatus(self.STOPPED);
+
+    def isRunning(self):
+        return self.isStatus(self.RUNNING);
+
+    def isStandby(self):
+        return self.isStatus(self.STANDBY);
+
     def __str__(self):
         return str(self.sharedObject.value);
 
