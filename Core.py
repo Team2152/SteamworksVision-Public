@@ -1,6 +1,7 @@
 import multiprocessing;
 import sys;
 import UDPSender;
+import runScript;
 from DataPacket import *;
 
 import Utils;
@@ -21,17 +22,6 @@ class Reaper(Utils.KeyListener):
     def onStop(self):
         stop();
 
-def DummyProcess(q, status):
-    packet = Packet();
-    packet.params = [
-        Param("DISTANCE", 0)
-    ];
-   
-    for i in range(10): q.put(packet);
-    
-    while (not status.isStopped()): pass;
-    log("Dummy Process Done.");
-
 def main():
 
     # Start program reaper to kill program with key press (ENTER)
@@ -43,13 +33,13 @@ def main():
 
     # Start vision processes
     boilerVisionProcess = None;
-    pegVisionProcess = None;
+    pegVisionProcess = multiprocessing.Process(target=runScript.run, args=(DATA_QUEUE, STATUS)).start();
     
     # Start example / dummmy process    
-    dummyProcess = multiprocessing.Process(target=DummyProcess, args=(DATA_QUEUE, STATUS)).start();
+    # dummyProcess = multiprocessing.Process(target=DummyProcess, args=(DATA_QUEUE, STATUS)).start();
 
-    while (not STATUS.isStopped()):
-        pass;
+    # Wait for status to signal stop
+    while (not STATUS.isStopped()): pass;
     
 ''' Stops the program by setting the shared status variable
     stop :: () -> () '''
