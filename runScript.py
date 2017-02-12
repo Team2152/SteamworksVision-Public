@@ -10,8 +10,8 @@ def run(queue, status):
 		if key == ord("q"):
 			break
 		result, mask = myTapeDetector.detectTape(frame)
-		cv2.imshow("window1", result)
-		cv2.imshow("window2", mask)
+		#cv2.imshow("window1", result)
+		#cv2.imshow("window2", mask)
 	camera.release
 	cv2.destroyAllWindows
 
