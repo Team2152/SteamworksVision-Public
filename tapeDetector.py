@@ -99,7 +99,7 @@ class tapeDetector():
 						adj2 = (239.5 * m.tan(m.radians(90-30)))
 						yAngle = m.degrees(-m.atan((targetPeg[1]-239.5)/adj2))
 						
-
+						"""
 						if (pixelsNew != 0):
 							#print (5.5 * w)
 							#print (10.5 * pixelsNew)
@@ -113,7 +113,8 @@ class tapeDetector():
 							#print parallax
 						else:
 							parallax = 0
-
+						"""
+						parallax = 0 
 						avgY = (pegYs[0]+pegYs[1])/2
 						bottomYAngle = m.degrees(-m.atan((avg-239.5)/adj2))
 						distance = 8.25/bottomYAngle
