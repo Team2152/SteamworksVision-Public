@@ -1,5 +1,5 @@
 import cv2
-import cv2.cv as cv
+import cv2 as cv
 import numpy as np
 import math as m
 from operator import itemgetter
@@ -71,7 +71,7 @@ class tapeDetector():
 						if x2 < x + 5 and x2 > x - 5:
 							cnt = np.concatenate((cnt,cnts[i]), axis=0)
 					rect = cv2.minAreaRect(cnt)
-					box = cv.BoxPoints(rect)
+					box = cv.boxPoints(rect)
 					box = np.int0(box)
 					cv2.drawContours(frame, [box], 0, (255, 0 ,0), 2)
 					if i == 2:
