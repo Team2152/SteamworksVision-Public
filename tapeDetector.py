@@ -6,12 +6,12 @@ from operator import itemgetter
 from DataPacket import *
 
 def pegInfo():
-    lowHue = 114
-    highHue = 260
-    lowSat = 40
-    highSat = 125
-    lowIntensity = 0
-    highIntensity = 80
+    lowHue = 46  # 126
+    highHue = 260  # 361
+    lowSat = 0  # 70
+    highSat = 71  # 255
+    lowIntensity = 0  # 0
+    highIntensity = 28  # 204
     lowBound = (lowHue, lowSat, lowIntensity)
     highBound = (highHue, highSat, highIntensity)
     thirdParam = "Parallax"
@@ -81,6 +81,12 @@ class tapeDetector():
 						pegX = (pegArea[0][0]+pegArea[1][0]+pegArea[2][0]+pegArea[3][0])/4
 						pegY = (pegArea[0][1]+pegArea[1][1]+pegArea[2][1]+pegArea[3][1])/4
 						
+						height1 = abs(pegArea[0][1] - pegArea[1][1])
+						height2 = abs(pegArea[1][1] - pegArea[2][1])
+						height3 = abs(pegArea[2][1] - pegArea[3][1])
+						height4 = abs(pegArea[3][1] - pegArea[0][1])
+						heights = sorted([height1,height2,height3,height4], reverse=True)
+						h = (heights[0] + heights[1])/2
 						width1 = abs(pegArea[0][0] - pegArea[1][0])
 						width2 = abs(pegArea[1][0] - pegArea[2][0])
 						width3 = abs(pegArea[2][0] - pegArea[3][0])
@@ -88,8 +94,8 @@ class tapeDetector():
 						widths = sorted([width1,width2,width3,width4], reverse=True)
 						w = (widths[0] + widths[1])/2
 						
-						pixels = heights[0] # +heights[1] ) /2 # Add this later (will need to retune)
-						pixelsNew = (heights[0]+heights[1])/2
+						#pixels = heights[0] # +heights[1] ) /2 # Add this later (will need to retune)
+						#pixelsNew = (heights[0]+heights[1])/2
 						
 						targetPeg = (pegX,pegY)
 						
@@ -97,36 +103,34 @@ class tapeDetector():
 						xAngle = m.degrees(m.atan((targetPeg[0]-319.5)/adj))
 						
 						adj2 = (239.5 * m.tan(m.radians(90-30)))
-						yAngle = m.degrees(-m.atan((targetPeg[1]-239.5)/adj2))
+						yAngle = m.degrees(m.atan((targetPeg[1]-239.5)/adj2))
 						
-						"""
-						if (pixelsNew != 0):
-							#print (5.5 * w)
-							#print (10.5 * pixelsNew)
-							result = (5.5 * w) / (10.5 * pixelsNew)
-							#print result
+						
+						if (h != 0):
+							
+							result = (5.5 * w) / (10.5 * h * 15/16)
 							if result > 1:
 								result = 1
 							elif result < -1:
 								result = -1
 							parallax = m.degrees(m.acos(result))
-							#print parallax
+							
 						else:
 							parallax = 0
-						"""
-						parallax = 0 
-						avgY = (pegYs[0]+pegYs[1])/2
-						bottomYAngle = m.degrees(-m.atan((avg-239.5)/adj2))
-						distance = 8.25/bottomYAngle
-
+						
+						#parallax = 0 
+						avgY = (pegYs[2]+pegYs[3])/2
+						cv2.line(frame, (0,avgY), (640,avgY), (255,200,49))
+						bottomYAngle = m.atan((avgY-239.5)/adj2)
+						distance = 8.25/m.tan(bottomYAngle)
 						
 						cv2.drawContours(frame, [pegArea], 0, (0, 0, 255), 4)
 						cv2.line(frame, targetPeg, targetPeg, (255, 0, 255), 20)
 
 						cv2.putText(mask, "X Angle: " + str(xAngle), (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
 						cv2.putText(mask, "Y Angle: " + str(yAngle), (10,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-						cv2.putText(mask, "Pixel Count: " + str(pixels), (10,110), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-						cv2.putText(mask, "Distance: " + str(distance), (10,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+						cv2.putText(mask, "Distance: " + str(distance), (10,110), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+						cv2.putText(mask, "Parallax: " + str(parallax), (10,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
 						if (self.thirdParam == "yAngle"):
 							thirdValue = yAngle
 						else:

@@ -1,5 +1,5 @@
 import cv2
-# import cv2.cv as cv
+import cv2 as cv
 import numpy as np
 import math as m
 
@@ -13,12 +13,12 @@ global highSat
 global lowIntensity
 global highIntensity
 
-lowHue = 0  # 126
-highHue = 122  # 361
-lowSat = 40  # 70
-highSat = 100  # 255
+lowHue = 46  # 126
+highHue = 260  # 361
+lowSat = 0  # 70
+highSat = 71  # 255
 lowIntensity = 0  # 0
-highIntensity = 204  # 204
+highIntensity = 28  # 204
 
 cv2.namedWindow("Trackbars", 0)
 
@@ -83,7 +83,7 @@ while True:
         if cnt is not None:
             x, y, w, h = cv2.boundingRect(cnt)
             rect = cv2.minAreaRect(cnt)
-            box = cv2.cv.BoxPoints(rect)
+            box = cv.boxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(frame, [box], 0, (255, 0, 0), 2)
             hull = cv2.convexHull(cnt)

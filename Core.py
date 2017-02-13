@@ -15,7 +15,7 @@ DATA_QUEUE = multiprocessing.Queue();
 
 # Network information
 UDP_PORT  = 5800;
-TARGET_IP = roboRio-2152-FRC.local;
+TARGET_IP = "roboRio-2152-FRC.local";
 
 # Stops the program on key press
 class Reaper(Utils.KeyListener):
