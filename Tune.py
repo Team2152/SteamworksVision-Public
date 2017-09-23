@@ -13,7 +13,7 @@ global highSat
 global lowIntensity
 global highIntensity
 
-lowHue = 0  # 126
+lowHue = 0  # 126 
 highHue = 122  # 361
 lowSat = 40  # 70
 highSat = 100  # 255
