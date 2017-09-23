@@ -20,6 +20,7 @@ colorUpper = (130, 150, 255)
 # to the webcam
 if not args.get("video", False):
 	camera = cv2.VideoCapture(0)
+	
  
 # otherwise, grab a reference to the video file
 else:
