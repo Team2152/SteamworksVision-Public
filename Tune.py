@@ -83,7 +83,7 @@ while True:
         if cnt is not None:
             x, y, w, h = cv2.boundingRect(cnt)
             rect = cv2.minAreaRect(cnt)
-            box = cv2.cv.BoxPoints(rect)
+            box = cv2.boxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(frame, [box], 0, (255, 0, 0), 2)
             hull = cv2.convexHull(cnt)
